@@ -18,12 +18,22 @@ for (let fila = 0; fila < y; fila++) {
 let posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
 tablero[posicionJugador.fila][posicionJugador.columna] = 1; // Ponerlo en el juego
 
-function renderGame() {
+//contantes de las celdas
+const tiposCelda = {
+  0: "aire",
+  1: "jugador",
+  2: "pilar",
+  3: "piedra",
+}
+
+// *** TABLERO TIENE QUE NO SER MODIFICADO DIRECTAMENTE, SOLO SU COPIA ***
+function renderGame(tableroActual = tablero) {
+  const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
   let tableroHTML = "";
   for (let fila = 0; fila < y; fila++) {
     for (let columna = 0; columna < x; columna++) {
       tableroHTML += `<div class="celda" data-fila="${fila}" data-col="${columna}">
-        ${tablero[fila][columna]}
+        ${tableroCopia[fila][columna]}
       </div>`;
     }
   }
