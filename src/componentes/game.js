@@ -1,7 +1,87 @@
-export { renderContent };
-function renderContent() {
+export { renderGame};
+
+//constantes del tablero
+const x = 9; // Fila
+const y = 9; // Columna
+const tablero = [];
+for (let fila = 0; fila < y; fila++) {
+  tablero[fila] = [];
+  for (let columna = 0; columna < x; columna++) {
+    if (fila % 2 != 0 && columna % 2 != 0) {
+      tablero[fila][columna] = 2; // Obstáculo
+    } else {
+      tablero[fila][columna] = 0; // Espacio vacío
+    }
+  }
+}
+
+let posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
+tablero[posicionJugador.fila][posicionJugador.columna] = 1; // Ponerlo en el juego
+
+function renderGame() {
+  let tableroHTML = "";
+  for (let fila = 0; fila < y; fila++) {
+    for (let columna = 0; columna < x; columna++) {
+      tableroHTML += `<div class="celda" data-fila="${fila}" data-col="${columna}">
+        ${tablero[fila][columna]}
+      </div>`;
+    }
+  }
+
   return `
-    <div class="container px-4 py-5" id="custom-cards"> <h2 class="pb-2 border-bottom">Custom cards</h2> <div class="row row-cols-1 row-cols-lg-3 align-items-stretch g-4 py-5"> <div class="col"> <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg" style="background-image: url('unsplash-photo-1.jpg');"> <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1"> <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">Short title, long jacket</h3> <ul class="d-flex list-unstyled mt-auto"> <li class="me-auto"> <img src="https://github.com/twbs.png" alt="Bootstrap" width="32" height="32" class="rounded-circle border border-white"> </li> <li class="d-flex align-items-center me-3"> <svg class="bi me-2" width="1em" height="1em" role="img" aria-label="Location"><use xlink:href="#geo-fill"></use></svg> <small>Earth</small> </li> <li class="d-flex align-items-center"> <svg class="bi me-2" width="1em" height="1em" role="img" aria-label="Duration"><use xlink:href="#calendar3"></use></svg> <small>3d</small> </li> </ul> </div> </div> </div> <div class="col"> <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg" style="background-image: url('unsplash-photo-2.jpg');"> <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1"> <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">Much longer title that wraps to multiple lines</h3> <ul class="d-flex list-unstyled mt-auto"> <li class="me-auto"> <img src="https://github.com/twbs.png" alt="Bootstrap" width="32" height="32" class="rounded-circle border border-white"> </li> <li class="d-flex align-items-center me-3"> <svg class="bi me-2" width="1em" height="1em" role="img" aria-label="Location"><use xlink:href="#geo-fill"></use></svg> <small>Pakistan</small> </li> <li class="d-flex align-items-center"> <svg class="bi me-2" width="1em" height="1em" role="img" aria-label="Duration"><use xlink:href="#calendar3"></use></svg> <small>4d</small> </li> </ul> </div> </div> </div> <div class="col"> <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg" style="background-image: url('unsplash-photo-3.jpg');"> <div class="d-flex flex-column h-100 p-5 pb-3 text-shadow-1"> <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">Another longer title belongs here</h3> <ul class="d-flex list-unstyled mt-auto"> <li class="me-auto"> <img src="https://github.com/twbs.png" alt="Bootstrap" width="32" height="32" class="rounded-circle border border-white"> </li> <li class="d-flex align-items-center me-3"> <svg class="bi me-2" width="1em" height="1em" role="img" aria-label="Location"><use xlink:href="#geo-fill"></use></svg> <small>California</small> </li> <li class="d-flex align-items-center"> <svg class="bi me-2" width="1em" height="1em" role="img" aria-label="Duration"><use xlink:href="#calendar3"></use></svg> <small>5d</small> </li> </ul> </div> </div> </div> </div> </div>
- 
+    <div id="contenedorJuego">
+      <div id="contenedorTablero">
+        ${tableroHTML}
+      </div>
+    </div>
   `;
 }
+
+function movePlayer(direccion) {
+  // Quitar jugador de la posición actual
+  tablero[posicionJugador.fila][posicionJugador.columna] = 0;
+
+  // Actualizar posición
+  if (direccion == "arriba" && posicionJugador.fila > 0 && tablero[posicionJugador.fila -1][posicionJugador.columna] != 2) posicionJugador.fila--;
+  if (direccion == "abajo" && posicionJugador.fila < y - 1 && tablero[posicionJugador.fila +1][posicionJugador.columna] != 2) posicionJugador.fila++;
+  if (direccion == "izquierda" && posicionJugador.columna > 0 && tablero[posicionJugador.fila][posicionJugador.columna -1] != 2) posicionJugador.columna--;
+  if (direccion == "derecha" && posicionJugador.columna < x - 1 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 2) posicionJugador.columna++;
+
+  // Ponerlo en la nueva posición
+  tablero[posicionJugador.fila][posicionJugador.columna] = 1;
+}
+
+
+document.addEventListener("keydown", (event) => {
+  event.preventDefault()
+  let moved = false;
+  switch (event.key) {
+    case "ArrowUp":
+    case "w":
+    case "W":
+      movePlayer("arriba");
+      moved = true;
+      break;
+    case "ArrowDown":
+    case "s":
+    case "S":
+      movePlayer("abajo");
+      moved = true;
+      break;
+    case "ArrowLeft":
+    case "a":
+    case "A":
+      movePlayer("izquierda");
+      moved = true;
+      break;
+    case "ArrowRight":
+    case "d":
+    case "D":
+      movePlayer("derecha");
+      moved = true;
+      break;
+  }
+  if (moved) { //Si se mueve redibuja el tablero
+    document.getElementById("app").innerHTML = renderGame();
+  }
+});

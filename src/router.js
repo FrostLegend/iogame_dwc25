@@ -1,10 +1,11 @@
 import { renderContent } from "./componentes/content";
+import { renderGame } from "./componentes/game";
 
 export {router};
 
 const routes = new Map([
     ['',renderContent],
-    ['#game',renderContent]
+    ['#game',renderGame]
 ])
 
 function router(route, container) {
