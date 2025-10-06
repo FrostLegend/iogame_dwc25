@@ -1,5 +1,7 @@
 @import "bootstrap/scss/bootstrap";
-
+#app{
+  background-color: darkgrey;
+}
 #contenedorJuego{
   width: 100vh;
   height: 100vh;
@@ -8,7 +10,7 @@
 }
 
 #contenedorTablero{
-  width: 50%;
+  width: 576px;
   display: grid;
   grid-template-columns: repeat(9,1fr);
   grid-template-rows: repeat(9,1fr);
@@ -17,9 +19,27 @@
 
 
 .celda {
-  border: 1px solid black;
   text-align: center;
   font-size: 2.5vh;
   cursor: pointer;
   aspect-ratio: 1 / 1;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.celda.aire {
+  background-image: url('img/suelo.png');
+}
+
+.celda.jugador {
+  background-image: url('img/Bomberman_WR.webp'), url('img/suelo.png');;
+}
+
+.celda.pilar {
+  background-image: url('img/pilar.webp');
+}
+
+.celda.muro {
+  background-image: url('img/pilar.webp');
 }

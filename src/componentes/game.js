@@ -8,9 +8,9 @@ for (let fila = 0; fila < y; fila++) {
   tablero[fila] = [];
   for (let columna = 0; columna < x; columna++) {
     if (fila % 2 != 0 && columna % 2 != 0) {
-      tablero[fila][columna] = 2; // Obstáculo
+      tablero[fila][columna] = 2;
     } else {
-      tablero[fila][columna] = 0; // Espacio vacío
+      tablero[fila][columna] = 0;
     }
   }
 }
@@ -30,11 +30,14 @@ const tiposCelda = {
 function renderGame(tableroActual = tablero) {
   const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
   let tableroHTML = "";
+
   for (let fila = 0; fila < y; fila++) {
     for (let columna = 0; columna < x; columna++) {
-      tableroHTML += `<div class="celda" data-fila="${fila}" data-col="${columna}">
-        ${tableroCopia[fila][columna]}
-      </div>`;
+      const clase = tiposCelda[tableroCopia[fila][columna]];
+
+      tableroHTML += `
+        <div class="celda ${clase}" data-fila="${fila}" data-col="${columna}">
+        </div>`;
     }
   }
 
@@ -61,7 +64,7 @@ function movePlayer(direccion) {
   tablero[posicionJugador.fila][posicionJugador.columna] = 1;
 }
 
-
+// Movimineto
 document.addEventListener("keydown", (event) => {
   event.preventDefault()
   let moved = false;
