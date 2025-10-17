@@ -43,3 +43,11 @@
 .celda.muro {
   background-image: url('img/pilar.webp');
 }
+
+.celda.bomba {
+  background-image: url('img/Bomba.gif'), url('img/suelo.png');
+}
+
+.celda.jugadorBomba {
+  background-image: url('img/Bomberman_WR.webp'), url('img/Bomba.gif'), url('img/suelo.png');
+}

@@ -24,6 +24,9 @@ const tiposCelda = {
   1: "jugador",
   2: "pilar",
   3: "piedra",
+  4: "bomba",
+  5: "explosion",
+  6: "jugadorBomba",
 }
 
 // *** TABLERO TIENE QUE NO SER MODIFICADO DIRECTAMENTE, SOLO SU COPIA ***
@@ -50,51 +53,75 @@ function renderGame(tableroActual = tablero) {
   `;
 }
 
+//Mecanicas
+
+//Bomba
+function placeBomb(){
+  // Colocar bomba en la posición del jugador
+  tablero[posicionJugador.fila][posicionJugador.columna] = 6;
+  let posicionBombaX = posicionJugador.fila;
+  let posicionBombaY = posicionJugador.columna;
+  setTimeout(() => {
+    tablero[posicionBombaX][posicionBombaY] = 0;
+    document.getElementById("app").innerHTML = renderGame();
+  }, 1500);
+}
+
+//Movimiento y colisiones 
 function movePlayer(direccion) {
-  // Quitar jugador de la posición actual
-  tablero[posicionJugador.fila][posicionJugador.columna] = 0;
+  // Quitar jugador de la posición actual y actualizar si pone bomba
+  if (tablero[posicionJugador.fila][posicionJugador.columna] == 6) {
+    tablero[posicionJugador.fila][posicionJugador.columna] = 4;
+  } else {
+    tablero[posicionJugador.fila][posicionJugador.columna] = 0;
+  }
 
   // Actualizar posición
-  if (direccion == "arriba" && posicionJugador.fila > 0 && tablero[posicionJugador.fila -1][posicionJugador.columna] != 2) posicionJugador.fila--;
-  if (direccion == "abajo" && posicionJugador.fila < y - 1 && tablero[posicionJugador.fila +1][posicionJugador.columna] != 2) posicionJugador.fila++;
-  if (direccion == "izquierda" && posicionJugador.columna > 0 && tablero[posicionJugador.fila][posicionJugador.columna -1] != 2) posicionJugador.columna--;
-  if (direccion == "derecha" && posicionJugador.columna < x - 1 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 2) posicionJugador.columna++;
+  if (direccion == "arriba" && posicionJugador.fila > 0 && tablero[posicionJugador.fila -1][posicionJugador.columna] != 2 && tablero[posicionJugador.fila -1][posicionJugador.columna] != 4) posicionJugador.fila--;
+  if (direccion == "abajo" && posicionJugador.fila < y - 1 && tablero[posicionJugador.fila +1][posicionJugador.columna] != 2 && tablero[posicionJugador.fila +1][posicionJugador.columna] != 4) posicionJugador.fila++;
+  if (direccion == "izquierda" && posicionJugador.columna > 0 && tablero[posicionJugador.fila][posicionJugador.columna -1] != 2 && tablero[posicionJugador.fila][posicionJugador.columna -1] != 4) posicionJugador.columna--;
+  if (direccion == "derecha" && posicionJugador.columna < x - 1 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 2 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 4) posicionJugador.columna++;
 
   // Ponerlo en la nueva posición
   tablero[posicionJugador.fila][posicionJugador.columna] = 1;
 }
 
-// Movimineto
+// Direcciones y controles
 document.addEventListener("keydown", (event) => {
   event.preventDefault()
-  let moved = false;
+  let mover = false;
+  let bomb = false;
   switch (event.key) {
     case "ArrowUp":
     case "w":
     case "W":
       movePlayer("arriba");
-      moved = true;
+      mover = true;
       break;
     case "ArrowDown":
     case "s":
     case "S":
       movePlayer("abajo");
-      moved = true;
+      mover = true;
       break;
     case "ArrowLeft":
     case "a":
     case "A":
       movePlayer("izquierda");
-      moved = true;
+      mover = true;
       break;
     case "ArrowRight":
     case "d":
     case "D":
       movePlayer("derecha");
-      moved = true;
+      mover = true;
+      break;
+    case "x":
+      placeBomb();
+      bomb = true;
       break;
   }
-  if (moved) { //Si se mueve redibuja el tablero
+  if (mover || bomb) { //Si se mueve o pone la bomba redibuja el tablero
     document.getElementById("app").innerHTML = renderGame();
   }
 });
