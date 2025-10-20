@@ -29,6 +29,7 @@ const tiposCelda = {
   6: "jugadorBomba",
 }
 
+//*** TIENE QUE DEVOLVER UN DIV Y NO UN STRING ***/
 // *** TABLERO TIENE QUE NO SER MODIFICADO DIRECTAMENTE, SOLO SU COPIA ***
 function renderGame(tableroActual = tablero) {
   const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
@@ -69,9 +70,13 @@ function placeBomb(){
 
 //Movimiento y colisiones 
 function movePlayer(direccion) {
+  // Saber si se puso bomba
+  let hayBomba = false;
+
   // Quitar jugador de la posición actual y actualizar si pone bomba
   if (tablero[posicionJugador.fila][posicionJugador.columna] == 6) {
     tablero[posicionJugador.fila][posicionJugador.columna] = 4;
+    hayBomba = true;
   } else {
     tablero[posicionJugador.fila][posicionJugador.columna] = 0;
   }
@@ -83,45 +88,51 @@ function movePlayer(direccion) {
   if (direccion == "derecha" && posicionJugador.columna < x - 1 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 2 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 4) posicionJugador.columna++;
 
   // Ponerlo en la nueva posición
-  tablero[posicionJugador.fila][posicionJugador.columna] = 1;
+  if (hayBomba) {
+    tablero[posicionJugador.fila][posicionJugador.columna] = 6;
+  } else {
+    tablero[posicionJugador.fila][posicionJugador.columna] = 1;
+  }
 }
 
 // Direcciones y controles
 document.addEventListener("keydown", (event) => {
-  event.preventDefault()
-  let mover = false;
-  let bomb = false;
-  switch (event.key) {
-    case "ArrowUp":
-    case "w":
-    case "W":
-      movePlayer("arriba");
-      mover = true;
-      break;
-    case "ArrowDown":
-    case "s":
-    case "S":
-      movePlayer("abajo");
-      mover = true;
-      break;
-    case "ArrowLeft":
-    case "a":
-    case "A":
-      movePlayer("izquierda");
-      mover = true;
-      break;
-    case "ArrowRight":
-    case "d":
-    case "D":
-      movePlayer("derecha");
-      mover = true;
-      break;
-    case "x":
-      placeBomb();
-      bomb = true;
-      break;
-  }
-  if (mover || bomb) { //Si se mueve o pone la bomba redibuja el tablero
-    document.getElementById("app").innerHTML = renderGame();
-  }
+    if (window.location.hash == "#game"){  
+    event.preventDefault()
+      let mover = false;
+      let bomb = false;
+      switch (event.key) {
+        case "ArrowUp":
+        case "w":
+        case "W":
+          movePlayer("arriba");
+          mover = true;
+          break;
+        case "ArrowDown":
+        case "s":
+        case "S":
+          movePlayer("abajo");
+          mover = true;
+          break;
+        case "ArrowLeft":
+        case "a":
+        case "A":
+          movePlayer("izquierda");
+          mover = true;
+          break;
+        case "ArrowRight":
+        case "d":
+        case "D":
+          movePlayer("derecha");
+          mover = true;
+          break;
+        case "x":
+          placeBomb();
+          bomb = true;
+          break;
+      }
+      if (mover || bomb) { //Si se mueve o pone la bomba redibuja el tablero
+        document.getElementById("app").innerHTML = renderGame();
+      }
+    }
 });
