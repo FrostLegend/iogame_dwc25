@@ -9,14 +9,14 @@ const routes = new Map([
     ['',renderContent],
     ['#game',renderGame],
     ['#login',renderLogin],
-    ['#login',renderRegister]
+    ['#register',renderRegister]
 ])
 
 
 // EL ROUTER TIENE QUE SER REMPLACE CHILDREN EN VEZ DE INNERHTML
 function router(route, container) {
     if (routes.has(route)) {
-        container.innerHTML = routes.get(route)();
+        container.replaceChildren(routes.get(route)());
     } else {
         container.innerHTML = `<h1>404 Not Found</h1>`;
     }
