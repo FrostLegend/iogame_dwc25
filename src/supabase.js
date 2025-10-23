@@ -1,4 +1,5 @@
-export async function authUsuario(SUPABASE_KEY, body, USER_RUTE, accion) {
+import { SUPABASE_KEY, USER_RUTE } from "./env.js";
+export async function authUsuario(body, accion) {
     const tipo = {
         0: "signup",
         1: "token?grant_type=password"

@@ -1,4 +1,3 @@
-import { SUPABASE_KEY, USER_RUTE } from "../env.js";
 import { authUsuario } from "../supabase.js";
 export { renderRegister };
 
@@ -24,7 +23,7 @@ function renderRegister() {
       email: document.getElementById('signupemail').value,
       password: document.getElementById('signuppassword').value
     }
-    await authUsuario(SUPABASE_KEY, body, USER_RUTE), 0;
+    await authUsuario(body, 0);
 
     form.reset();
   })

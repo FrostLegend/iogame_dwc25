@@ -1,4 +1,3 @@
-import { SUPABASE_KEY, USER_RUTE } from "../env.js";
 import { authUsuario } from "../supabase.js";
 export { renderLogin };
 
@@ -23,7 +22,7 @@ function renderLogin() {
       email: document.getElementById('signupemail').value,
       password: document.getElementById('signuppassword').value
     }
-    await authUsuario(SUPABASE_KEY, body, USER_RUTE, 1);
+    await authUsuario(body, 1);
 
     form.reset();
   })
