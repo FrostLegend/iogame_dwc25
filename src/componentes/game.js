@@ -29,10 +29,33 @@ const tiposCelda = {
   6: "jugadorBomba",
 }
 
+// Objetos
+class Bomb {
+  constructor(idJugador, x, y) {
+    this.x = x; // Fila
+    this.y = y; // Columna
+    this.idJugador = idJugador;
+    this.explotada = false; // estado de la bomba
+  }
+
+  // Método para detonar la bomba
+  detonar(tablero) {
+    this.explotada = true;
+    tablero[this.y][this.x] = 5; // marca explosión en el tablero
+  }
+
+  // Método para limpiar la bomba del tablero
+  limpiar(tablero) {
+    tablero[this.y][this.x] = 0; // vuelve a aire
+  }
+}
+
 //*** TIENE QUE DEVOLVER UN DIV Y NO UN STRING ***/
 // *** TABLERO TIENE QUE NO SER MODIFICADO DIRECTAMENTE, SOLO SU COPIA ***
 function renderGame(tableroActual = tablero) {
   const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
+  let contenedorJuego = document.createElement("div");
+  contenedorJuego.id = "contenedorJuego";
   let tableroHTML = "";
 
   for (let fila = 0; fila < y; fila++) {
@@ -42,57 +65,60 @@ function renderGame(tableroActual = tablero) {
       tableroHTML += `
         <div class="celda ${clase}" data-fila="${fila}" data-col="${columna}">
         </div>`;
+      
     }
   }
-
-  return `
-    <div id="contenedorJuego">
+  const html = `
       <div id="contenedorTablero">
         ${tableroHTML}
       </div>
-    </div>
   `;
+  contenedorJuego.innerHTML = html;
+  return contenedorJuego;
 }
 
 //Mecanicas
 
 //Bomba
-function placeBomb(){
+function placeBomb(aumento){
   // Colocar bomba en la posición del jugador
   tablero[posicionJugador.fila][posicionJugador.columna] = 6;
   let posicionBombaX = posicionJugador.fila;
   let posicionBombaY = posicionJugador.columna;
+
+  // Explosión
+  setTimeout(() => {
+    tablero[posicionBombaX][posicionBombaY] = 5;
+    document.getElementById("app").replaceChildren(renderGame());
+  }, 1500);
+  
+  // Quitar explosión
   setTimeout(() => {
     tablero[posicionBombaX][posicionBombaY] = 0;
-    document.getElementById("app").innerHTML = renderGame();
-  }, 1500);
+    document.getElementById("app").replaceChildren(renderGame());
+  }, 2000);
 }
 
 //Movimiento y colisiones 
-function movePlayer(direccion) {
-  // Saber si se puso bomba
-  let hayBomba = false;
+function movePlayer(direccion, tableroActual, posicionJugador) {
+  const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
+  const posicionJugadorCopia = posicionJugador.map(fila => [...fila]); // Copia del tablero original
 
   // Quitar jugador de la posición actual y actualizar si pone bomba
-  if (tablero[posicionJugador.fila][posicionJugador.columna] == 6) {
-    tablero[posicionJugador.fila][posicionJugador.columna] = 4;
-    hayBomba = true;
+  if (tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna] === 6) {
+    tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna] = 4;
   } else {
-    tablero[posicionJugador.fila][posicionJugador.columna] = 0;
+    tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna] = 0;
   }
 
   // Actualizar posición
-  if (direccion == "arriba" && posicionJugador.fila > 0 && tablero[posicionJugador.fila -1][posicionJugador.columna] != 2 && tablero[posicionJugador.fila -1][posicionJugador.columna] != 4) posicionJugador.fila--;
-  if (direccion == "abajo" && posicionJugador.fila < y - 1 && tablero[posicionJugador.fila +1][posicionJugador.columna] != 2 && tablero[posicionJugador.fila +1][posicionJugador.columna] != 4) posicionJugador.fila++;
-  if (direccion == "izquierda" && posicionJugador.columna > 0 && tablero[posicionJugador.fila][posicionJugador.columna -1] != 2 && tablero[posicionJugador.fila][posicionJugador.columna -1] != 4) posicionJugador.columna--;
-  if (direccion == "derecha" && posicionJugador.columna < x - 1 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 2 && tablero[posicionJugador.fila][posicionJugador.columna +1] != 4) posicionJugador.columna++;
+  if (direccion == "arriba" && posicionJugadorCopia.fila > 0 && tableroCopia[posicionJugadorCopia.fila -1][posicionJugadorCopia.columna] != 2 && tableroCopia[posicionJugadorCopia.fila -1][posicionJugadorCopia.columna] != 4) posicionJugadorCopia.fila--;
+  if (direccion == "abajo" && posicionJugadorCopia.fila < y - 1 && tableroCopia[posicionJugadorCopia.fila +1][posicionJugadorCopia.columna] != 2 && tableroCopia[posicionJugadorCopia.fila +1][posicionJugadorCopia.columna] != 4) posicionJugadorCopia.fila++;
+  if (direccion == "izquierda" && posicionJugadorCopia.columna > 0 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna -1] != 2 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna -1] != 4) posicionJugadorCopia.columna--;
+  if (direccion == "derecha" && posicionJugadorCopia.columna < x - 1 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna +1] != 2 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna +1] != 4) posicionJugadorCopia.columna++;
 
   // Ponerlo en la nueva posición
-  if (hayBomba) {
-    tablero[posicionJugador.fila][posicionJugador.columna] = 6;
-  } else {
-    tablero[posicionJugador.fila][posicionJugador.columna] = 1;
-  }
+  tablero[posicionJugadorCopia.fila][posicionJugadorCopia.columna] = 1;
 }
 
 // Direcciones y controles
@@ -132,7 +158,7 @@ document.addEventListener("keydown", (event) => {
           break;
       }
       if (mover || bomb) { //Si se mueve o pone la bomba redibuja el tablero
-        document.getElementById("app").innerHTML = renderGame();
+        document.getElementById("app").replaceChildren(renderGame());
       }
     }
 });

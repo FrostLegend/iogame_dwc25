@@ -48,6 +48,10 @@
   background-image: url('img/Bomba.gif'), url('img/suelo.png');
 }
 
+.celda.explosion {
+  background-image: url('img/Explosion.gif'),url('img/suelo.png');
+}
+
 .celda.jugadorBomba {
   background-image: url('img/Bomberman_WR.webp'), url('img/Bomba.gif'), url('img/suelo.png');
 }
