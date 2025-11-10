@@ -1,8 +1,8 @@
 export { renderGame};
 
 //constantes del tablero
-const x = 9; // Fila
-const y = 9; // Columna
+const x = 9; // Columna
+const y = 9; // Fila
 const tablero = [];
 for (let fila = 0; fila < y; fila++) {
   tablero[fila] = [];
@@ -26,32 +26,19 @@ const tiposCelda = {
   3: "piedra",
   4: "bomba",
   5: "explosion",
-  6: "jugadorBomba",
-}
+  6: "jugadorBomba"
+};
 
 // Objetos
 class Bomb {
   constructor(idJugador, x, y) {
-    this.x = x; // Fila
-    this.y = y; // Columna
+    this.x = x; // Columna
+    this.y = y; // Fila
     this.idJugador = idJugador;
-    this.explotada = false; // estado de la bomba
-  }
-
-  // Método para detonar la bomba
-  detonar(tablero) {
-    this.explotada = true;
-    tablero[this.y][this.x] = 5; // marca explosión en el tablero
-  }
-
-  // Método para limpiar la bomba del tablero
-  limpiar(tablero) {
-    tablero[this.y][this.x] = 0; // vuelve a aire
+    this.explotada = false; // Estado de la bomba
   }
 }
 
-//*** TIENE QUE DEVOLVER UN DIV Y NO UN STRING ***/
-// *** TABLERO TIENE QUE NO SER MODIFICADO DIRECTAMENTE, SOLO SU COPIA ***
 function renderGame(tableroActual = tablero) {
   const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
   let contenedorJuego = document.createElement("div");
@@ -80,7 +67,7 @@ function renderGame(tableroActual = tablero) {
 //Mecanicas
 
 //Bomba
-function placeBomb(aumento){
+function placeBomb(){
   // Colocar bomba en la posición del jugador
   tablero[posicionJugador.fila][posicionJugador.columna] = 6;
   let posicionBombaX = posicionJugador.fila;
@@ -99,31 +86,75 @@ function placeBomb(aumento){
   }, 2000);
 }
 
-//Movimiento y colisiones 
-function movePlayer(direccion, tableroActual, posicionJugador) {
-  const tableroCopia = tableroActual.map(fila => [...fila]); // Copia del tablero original
-  const posicionJugadorCopia = posicionJugador.map(fila => [...fila]); // Copia del tablero original
+//Movimiento y colisiones
 
-  // Quitar jugador de la posición actual y actualizar si pone bomba
-  if (tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna] === 6) {
-    tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna] = 4;
-  } else {
-    tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna] = 0;
+// Limpiar posición anterior
+function limpiarPosicionAnterior(tablero, posicion) {
+  const copia = tablero.map(fila => [...fila]);
+  copia[posicion.fila][posicion.columna] = 
+    copia[posicion.fila][posicion.columna] === 6 ? 4 : 0;
+  return copia;
+}
+
+// Validar movimiento
+function esMovimientoValido(tablero, posicion, direccion) {
+  const filas = tablero.length;
+  const columnas = tablero[0].length;
+  
+  if (direccion === "arriba") {
+    return posicion.fila > 0 && 
+           tablero[posicion.fila -1][posicion.columna] !== 2 && 
+           tablero[posicion.fila -1][posicion.columna] !== 4;
+  } else if (direccion === "abajo") {
+    return posicion.fila < filas -1 && 
+           tablero[posicion.fila +1][posicion.columna] !== 2 && 
+           tablero[posicion.fila +1][posicion.columna] !== 4;
+  } else if (direccion === "izquierda") {
+    return posicion.columna > 0 && 
+           tablero[posicion.fila][posicion.columna -1] !== 2 && 
+           tablero[posicion.fila][posicion.columna -1] !== 4;
+  } else if (direccion === "derecha") {
+    return posicion.columna < columnas -1 && 
+           tablero[posicion.fila][posicion.columna +1] !== 2 && 
+           tablero[posicion.fila][posicion.columna +1] !== 4;
   }
 
-  // Actualizar posición
-  if (direccion == "arriba" && posicionJugadorCopia.fila > 0 && tableroCopia[posicionJugadorCopia.fila -1][posicionJugadorCopia.columna] != 2 && tableroCopia[posicionJugadorCopia.fila -1][posicionJugadorCopia.columna] != 4) posicionJugadorCopia.fila--;
-  if (direccion == "abajo" && posicionJugadorCopia.fila < y - 1 && tableroCopia[posicionJugadorCopia.fila +1][posicionJugadorCopia.columna] != 2 && tableroCopia[posicionJugadorCopia.fila +1][posicionJugadorCopia.columna] != 4) posicionJugadorCopia.fila++;
-  if (direccion == "izquierda" && posicionJugadorCopia.columna > 0 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna -1] != 2 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna -1] != 4) posicionJugadorCopia.columna--;
-  if (direccion == "derecha" && posicionJugadorCopia.columna < x - 1 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna +1] != 2 && tableroCopia[posicionJugadorCopia.fila][posicionJugadorCopia.columna +1] != 4) posicionJugadorCopia.columna++;
+  return false;
+}
 
-  // Ponerlo en la nueva posición
-  tablero[posicionJugadorCopia.fila][posicionJugadorCopia.columna] = 1;
+// Calcular nueva posición
+function calcularNuevaPosicion(posicion, direccion) {
+  const nueva = { ...posicion };
+  if (direccion === "arriba") nueva.fila--;
+  if (direccion === "abajo") nueva.fila++;
+  if (direccion === "izquierda") nueva.columna--;
+  if (direccion === "derecha") nueva.columna++;
+  return nueva;
+}
+
+// Colocar jugador
+function colocarJugador(tablero, posicion) {
+  const copia = tablero.map(fila => [...fila]);
+  copia[posicion.fila][posicion.columna] = 1;
+  return copia;
+}
+
+function movePlayer(direccion, tableroActual, posicionJugadorActual) {
+  if (!esMovimientoValido(tableroActual, posicionJugadorActual, direccion)) {
+    return { tablero: tableroActual, posicionJugador: posicionJugadorActual };
+  }
+  
+  const tableroLimpio = limpiarPosicionAnterior(tableroActual, posicionJugadorActual);
+  const nuevaPosicion = calcularNuevaPosicion(posicionJugadorActual, direccion);
+  const tableroFinal = colocarJugador(tableroLimpio, nuevaPosicion);
+  
+  return { tablero: tableroFinal, posicionJugador: nuevaPosicion };
 }
 
 // Direcciones y controles
 document.addEventListener("keydown", (event) => {
-    if (window.location.hash == "#game"){  
+    if (window.location.hash == "#game"){
+    let accion;
     event.preventDefault()
       let mover = false;
       let bomb = false;
@@ -131,25 +162,25 @@ document.addEventListener("keydown", (event) => {
         case "ArrowUp":
         case "w":
         case "W":
-          movePlayer("arriba");
+          accion = movePlayer("arriba", tablero, posicionJugador);
           mover = true;
           break;
         case "ArrowDown":
         case "s":
         case "S":
-          movePlayer("abajo");
+          accion = movePlayer("abajo", tablero, posicionJugador);
           mover = true;
           break;
         case "ArrowLeft":
         case "a":
         case "A":
-          movePlayer("izquierda");
+          accion = movePlayer("izquierda", tablero, posicionJugador);
           mover = true;
           break;
         case "ArrowRight":
         case "d":
         case "D":
-          movePlayer("derecha");
+          accion = movePlayer("derecha", tablero, posicionJugador);
           mover = true;
           break;
         case "x":
@@ -158,6 +189,8 @@ document.addEventListener("keydown", (event) => {
           break;
       }
       if (mover || bomb) { //Si se mueve o pone la bomba redibuja el tablero
+        tablero.splice(0, tablero.length, ...accion.tablero);
+        posicionJugador = accion.posicionJugador;
         document.getElementById("app").replaceChildren(renderGame());
       }
     }
