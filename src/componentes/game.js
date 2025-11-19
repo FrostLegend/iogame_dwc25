@@ -3,20 +3,31 @@ export { renderGame};
 //constantes del tablero
 const x = 9; // Columna
 const y = 9; // Fila
+
 const tablero = [];
-for (let fila = 0; fila < y; fila++) {
-  tablero[fila] = [];
-  for (let columna = 0; columna < x; columna++) {
-    if (fila % 2 != 0 && columna % 2 != 0) {
-      tablero[fila][columna] = 2;
-    } else {
-      tablero[fila][columna] = 0;
+let posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
+
+// Función para inicializar el juego
+function initializeGame() {
+  // Inicializar tablero
+  tablero = [];
+  for (let fila = 0; fila < y; fila++) {
+    tablero[fila] = [];
+    for (let columna = 0; columna < x; columna++) {
+      if (fila % 2 !== 0 && columna % 2 !== 0) {
+        tablero[fila][columna] = 2; // Pilar
+      } else {
+        tablero[fila][columna] = 0; // Aire
+      }
     }
   }
-}
 
-let posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
-tablero[posicionJugador.fila][posicionJugador.columna] = 1; // Ponerlo en el juego
+  // Inicializar posición del jugador
+  posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
+  tablero[posicionJugador.fila][posicionJugador.columna] = 1;  // Ponerlo en el juego
+  
+  return { tablero, posicionJugador };
+}
 
 //contantes de las celdas
 const tiposCelda = {
@@ -89,7 +100,7 @@ function placeBomb(){
 //Movimiento y colisiones
 
 // Limpiar posición anterior
-function limpiarPosicionAnterior(tablero, posicion) {
+function claenPlayerPosition(tablero, posicion) {
   const copia = tablero.map(fila => [...fila]);
   copia[posicion.fila][posicion.columna] = 
     copia[posicion.fila][posicion.columna] === 6 ? 4 : 0;
@@ -97,7 +108,7 @@ function limpiarPosicionAnterior(tablero, posicion) {
 }
 
 // Validar movimiento
-function esMovimientoValido(tablero, posicion, direccion) {
+function isValidMove(tablero, posicion, direccion) {
   const filas = tablero.length;
   const columnas = tablero[0].length;
   
@@ -123,7 +134,7 @@ function esMovimientoValido(tablero, posicion, direccion) {
 }
 
 // Calcular nueva posición
-function calcularNuevaPosicion(posicion, direccion) {
+function calculateNewPosition(posicion, direccion) {
   const nueva = { ...posicion };
   if (direccion === "arriba") nueva.fila--;
   if (direccion === "abajo") nueva.fila++;
@@ -133,20 +144,20 @@ function calcularNuevaPosicion(posicion, direccion) {
 }
 
 // Colocar jugador
-function colocarJugador(tablero, posicion) {
+function placePlayer(tablero, posicion) {
   const copia = tablero.map(fila => [...fila]);
   copia[posicion.fila][posicion.columna] = 1;
   return copia;
 }
 
 function movePlayer(direccion, tableroActual, posicionJugadorActual) {
-  if (!esMovimientoValido(tableroActual, posicionJugadorActual, direccion)) {
+  if (!isValidMove(tableroActual, posicionJugadorActual, direccion)) {
     return { tablero: tableroActual, posicionJugador: posicionJugadorActual };
   }
   
-  const tableroLimpio = limpiarPosicionAnterior(tableroActual, posicionJugadorActual);
-  const nuevaPosicion = calcularNuevaPosicion(posicionJugadorActual, direccion);
-  const tableroFinal = colocarJugador(tableroLimpio, nuevaPosicion);
+  const tableroLimpio = claenPlayerPosition(tableroActual, posicionJugadorActual);
+  const nuevaPosicion = calculateNewPosition(posicionJugadorActual, direccion);
+  const tableroFinal = placePlayer(tableroLimpio, nuevaPosicion);
   
   return { tablero: tableroFinal, posicionJugador: nuevaPosicion };
 }
@@ -195,3 +206,6 @@ document.addEventListener("keydown", (event) => {
       }
     }
 });
+
+// Inicializar el juego al cargar
+initializeGame();
