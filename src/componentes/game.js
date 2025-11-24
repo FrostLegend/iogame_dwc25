@@ -4,7 +4,7 @@ export { renderGame};
 const x = 9; // Columna
 const y = 9; // Fila
 
-const tablero = [];
+let tablero = [];
 let posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
 
 // Función para inicializar el juego
@@ -25,8 +25,6 @@ function initializeGame() {
   // Inicializar posición del jugador
   posicionJugador = { fila: 0, columna: 0 }; // Posición inicial
   tablero[posicionJugador.fila][posicionJugador.columna] = 1;  // Ponerlo en el juego
-  
-  return { tablero, posicionJugador };
 }
 
 //contantes de las celdas
@@ -63,7 +61,7 @@ function renderGame(tableroActual = tablero) {
       tableroHTML += `
         <div class="celda ${clase}" data-fila="${fila}" data-col="${columna}">
         </div>`;
-      
+
     }
   }
   const html = `

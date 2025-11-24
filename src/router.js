@@ -2,11 +2,12 @@ import { renderContent } from "./componentes/content";
 import { renderGame } from "./componentes/game";
 import { renderLogin } from "./componentes/login";
 import { renderRegister} from "./componentes/register";
+import { renderGameReactive } from "./componentes/gameReactive";
 
 export {router};
 
 const routes = new Map([
-    ['',renderContent],
+    ['',renderGameReactive],
     ['#game',renderGame],
     ['#login',renderLogin],
     ['#register',renderRegister]
