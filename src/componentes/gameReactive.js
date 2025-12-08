@@ -1,6 +1,5 @@
-// game.js - RENDERIZADO REACTIVO
-import { BehaviorSubject, fromEvent, merge, timer } from "rxjs";
-import { map, filter, withLatestFrom, tap } from "rxjs/operators";
+import { BehaviorSubject, fromEvent, timer, interval } from "rxjs";
+import { map, filter, tap, delay, takeWhile } from "rxjs/operators";
 import { 
   initializeBoard, 
   movePlayer, 
@@ -11,120 +10,113 @@ import {
 
 export { renderGameReactive };
 
-// PURA - Renderizar tablero
-function renderTablero(tablero) {
-  const y = tablero.length;
-  const x = tablero[0].length;
-  let tableroHTML = "";
-
-  for (let fila = 0; fila < y; fila++) {
-    for (let columna = 0; columna < x; columna++) {
-      const clase = tiposCelda[tablero[fila][columna]];
-      tableroHTML += `
-        <div class="celda ${clase}" data-fila="${fila}" data-col="${columna}">
-        </div>`;
-    }
-  }
+// Renderizar cronómetro
+function renderCronometro(centesimas) {
+  const segundos = Math.floor(centesimas / 100);
+  const mins = Math.floor(segundos / 60);
+  const segs = segundos % 60;
+  const cents = centesimas % 100;
   
-  const contenedorJuego = document.createElement("div");
-  contenedorJuego.id = "contenedorJuego";
-  contenedorJuego.innerHTML = `
-    <div id="contenedorTablero">
-      ${tableroHTML}
+  const tiempo = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
+  
+  return `
+    <div style="display: flex; justify-content: center; align-items: center; 
+                padding: 15px; background: #2c3e50; color: white; 
+                border-radius: 10px; margin-bottom: 20px; font-size: 32px; 
+                font-weight: bold; font-family: 'Courier New', monospace;">
+      <span style="margin-right: 15px;">⏱️</span>
+      <span>${tiempo}</span>
     </div>
   `;
-  return contenedorJuego;
 }
 
-// Mapear teclas a direcciones
-function mapKeyToDirection(key) {
-  const keyMap = {
-    "ArrowUp": "arriba", "w": "arriba", "W": "arriba",
-    "ArrowDown": "abajo", "s": "abajo", "S": "abajo",
-    "ArrowLeft": "izquierda", "a": "izquierda", "A": "izquierda",
-    "ArrowRight": "derecha", "d": "derecha", "D": "derecha",
-    "x": "bomba"
-  };
-  return keyMap[key] || null;
+// Renderizar tablero
+function renderTablero(tablero) {
+  const tableroHTML = tablero.flatMap((fila, f) =>
+    fila.map((celda, c) => 
+      `<div class="celda ${tiposCelda[celda]}" data-fila="${f}" data-col="${c}"></div>`
+    )
+  ).join("");
+  
+  return `<div id="contenedorTablero">${tableroHTML}</div>`;
+}
+
+// Acción teclas
+const teclasConFuncion = {
+  ArrowUp: "arriba", w: "arriba", W: "arriba",
+  ArrowDown: "abajo", s: "abajo", S: "abajo",
+  ArrowLeft: "izquierda", a: "izquierda", A: "izquierda",
+  ArrowRight: "derecha", d: "derecha", D: "derecha",
+  x: "bomba"
+};
+
+// Manejar explosión de bomba
+function handleExplosion(tablero$, posicionBomba) {
+  timer(1500).pipe(
+    tap(() => {
+      // Explosión
+      tablero$.next(updateExplosion(tablero$.getValue(), posicionBomba, "explosion"));
+    }),
+    delay(500),
+    tap(() => {
+      // Limpiar
+      tablero$.next(updateExplosion(tablero$.getValue(), posicionBomba, "limpiar"));
+    })
+  ).subscribe();
 }
 
 function renderGameReactive() {
   const contenedor = document.createElement("div");
+  contenedor.id = "contenedorJuego";
   
-  // Estado reactivo con BehaviorSubjects
+  // Guardar estado del tablero y jugador
   const tablero$ = new BehaviorSubject(initializeBoard());
   const posicionJugador$ = new BehaviorSubject({ fila: 0, columna: 0 });
-
-    tablero$.subscribe(tablero => {
-        console.log("📊 Tablero actualizado:", tablero);
-    });
-
-    posicionJugador$.subscribe(posicion => {
-        console.log("🎮 Posición jugador:", posicion);
-    });
+  const centesimas$ = new BehaviorSubject(0);
+  const juegoActivo$ = new BehaviorSubject(true);
   
-  // Observable de teclas presionadas
-  const keydown$ = fromEvent(document, "keydown").pipe(
-    filter(() => window.location.hash === ""),
-    tap(e => e.preventDefault()),
-    map(e => mapKeyToDirection(e.key)),
-    filter(direccion => direccion !== null)
+  // Cronómetro (cada centésima)
+  interval(10).pipe(
+    takeWhile(() => juegoActivo$.getValue()),
+    tap(() => centesimas$.next(centesimas$.getValue() + 1))
+  ).subscribe();
+  
+  // Observable para cualquier evento de presion de tecla en la ventana del juego
+  const key$ = fromEvent(document, "keydown").pipe(
+    filter(() => window.location.hash === "#game"), // #game pagina del juego
+    filter(() => juegoActivo$.getValue()), // Solo si el juego está activo
+    tap(e => e.preventDefault()), // Evita mover la pagina con las flechas
+    map(e => teclasConFuncion[e.key]), // Guardamos la acción de la tecla
+    filter(Boolean) // Por si la tecla no tiene función
   );
   
-  // Manejar movimientos
-  const move$ = keydown$.pipe(
-    filter(direccion => direccion !== "bomba"),
-    withLatestFrom(tablero$, posicionJugador$),
-    map(([direccion, tablero, posicion]) => 
-      movePlayer(tablero, posicion, direccion)
-    )
-  );
-  
-  // Manejar bombas
-  const bomb$ = keydown$.pipe(
-    filter(direccion => direccion === "bomba"),
-    withLatestFrom(tablero$, posicionJugador$),
-    tap(([_, tablero, posicion]) => {
-      // Colocar bomba
-      const { tablero: tableroConBomba, posicionBomba } = 
-        placeBomb(tablero, posicion);
-      tablero$.next(tableroConBomba);
-      
-      // Explosión después de 1.5s
-      setTimeout(() => {
-        const tableroExplosion = updateExplosion(
-          tablero$.getValue(), 
-          posicionBomba, 
-          "explosion"
-        );
-        tablero$.next(tableroExplosion);
-        
-        // Limpiar después de 0.5s
-        setTimeout(() => {
-          const tableroLimpio = updateExplosion(
-            tablero$.getValue(), 
-            posicionBomba, 
-            "limpiar"
-          );
-          tablero$.next(tableroLimpio);
-        }, 500);
-      }, 1500);
-    })
-  );
-  
-  // Suscribirse a movimientos
-  move$.subscribe(({ tablero, posicionJugador }) => {
-    tablero$.next(tablero);
-    posicionJugador$.next(posicionJugador);
+  // Suscripción para manejar movimientos y bombas
+  key$.subscribe(accion => {
+    const tablero = tablero$.getValue();
+    const posicionPJ = posicionJugador$.getValue();
+    
+    if (accion === "bomba") { // Colocar bomba
+      const { tablero: nuevoTablero, posicionBomba } = placeBomb(tablero, posicionPJ);
+      tablero$.next(nuevoTablero);
+      handleExplosion(tablero$, posicionBomba);
+    } else { // Mover jugador
+      const resultado = movePlayer(tablero, posicionPJ, accion);
+      tablero$.next(resultado.tablero);
+      posicionJugador$.next(resultado.posicionJugador);
+    }
   });
   
-  // Suscribirse a bombas (solo para activar el efecto)
-  bomb$.subscribe();
+  // Función para renderizar todo
+  const renderizar = () => {
+    const cronometro = renderCronometro(centesimas$.getValue());
+    const tableroHTML = renderTablero(tablero$.getValue());
+    
+    contenedor.innerHTML = cronometro + tableroHTML;
+  };
   
-  // Renderizar cuando cambia el tablero
-  tablero$.subscribe(tablero => {
-    contenedor.replaceChildren(renderTablero(tablero));
-  });
+  // Suscribirse a cambios
+  tablero$.subscribe(renderizar);
+  centesimas$.subscribe(renderizar);
   
   return contenedor;
 }

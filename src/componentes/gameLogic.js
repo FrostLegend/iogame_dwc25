@@ -1,4 +1,3 @@
-// gameLogic.js - LÓGICA PURA
 export { 
   initializeBoard, 
   movePlayer, 
@@ -7,6 +6,7 @@ export {
   tiposCelda 
 };
 
+//contantes de las celdas
 const tiposCelda = {
   0: "aire",
   1: "jugador",
@@ -17,7 +17,7 @@ const tiposCelda = {
   6: "jugadorBomba"
 };
 
-// PURA - Crear tablero inicial
+// Función para inicializar el juego
 function initializeBoard(x = 9, y = 9) {
   const tablero = [];
   for (let fila = 0; fila < y; fila++) {
@@ -30,11 +30,15 @@ function initializeBoard(x = 9, y = 9) {
       }
     }
   }
-  tablero[0][0] = 1; // Jugador inicial
+  tablero[0][0] = 1; // Inicializar posición del jugador
   return tablero;
 }
 
-// PURA - Limpiar posición anterior
+// Mecanicas
+
+// Movimiento y colisiones
+
+// Limpiar posición anterior
 function cleanPlayerPosition(tablero, posicion) {
   const copia = tablero.map(fila => [...fila]);
   copia[posicion.fila][posicion.columna] = 
@@ -42,7 +46,7 @@ function cleanPlayerPosition(tablero, posicion) {
   return copia;
 }
 
-// PURA - Validar movimiento
+// Validar movimiento
 function isValidMove(tablero, posicion, direccion) {
   const filas = tablero.length;
   const columnas = tablero[0].length;
@@ -67,7 +71,7 @@ function isValidMove(tablero, posicion, direccion) {
   return false;
 }
 
-// PURA - Calcular nueva posición
+// Calcular nueva posición
 function calculateNewPosition(posicion, direccion) {
   const nueva = { ...posicion };
   if (direccion === "arriba") nueva.fila--;
@@ -77,14 +81,14 @@ function calculateNewPosition(posicion, direccion) {
   return nueva;
 }
 
-// PURA - Colocar jugador
+// Colocar jugador
 function placePlayer(tablero, posicion) {
   const copia = tablero.map(fila => [...fila]);
   copia[posicion.fila][posicion.columna] = 1;
   return copia;
 }
 
-// PURA - Mover jugador (retorna nuevo estado)
+// Mover jugador
 function movePlayer(tableroActual, posicionJugadorActual, direccion) {
   if (!isValidMove(tableroActual, posicionJugadorActual, direccion)) {
     return { tablero: tableroActual, posicionJugador: posicionJugadorActual };
@@ -97,7 +101,7 @@ function movePlayer(tableroActual, posicionJugadorActual, direccion) {
   return { tablero: tableroFinal, posicionJugador: nuevaPosicion };
 }
 
-// PURA - Colocar bomba (retorna nuevo estado)
+// Colocar bomba
 function placeBomb(tableroActual, posicionJugadorActual) {
   const copia = tableroActual.map(fila => [...fila]);
   copia[posicionJugadorActual.fila][posicionJugadorActual.columna] = 6;
@@ -107,7 +111,7 @@ function placeBomb(tableroActual, posicionJugadorActual) {
   };
 }
 
-// PURA - Actualizar explosión
+// Actualizar explosión
 function updateExplosion(tableroActual, posicionBomba, estado) {
   const copia = tableroActual.map(fila => [...fila]);
   if (estado === "explosion") {
