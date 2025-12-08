@@ -1,3 +1,4 @@
+// game.js - RENDERIZADO REACTIVO CON CRONÓMETRO
 import { BehaviorSubject, fromEvent, timer, interval } from "rxjs";
 import { map, filter, tap, delay, takeWhile } from "rxjs/operators";
 import { 
@@ -10,8 +11,8 @@ import {
 
 export { renderGameReactive };
 
-// Renderizar cronómetro
-function renderCronometro(centesimas) {
+// Renderizar cronómetro y monedas
+function renderContadores(centesimas, monedas, monedasObjetivo) {
   const segundos = Math.floor(centesimas / 100);
   const mins = Math.floor(segundos / 60);
   const segs = segundos % 60;
@@ -20,12 +21,18 @@ function renderCronometro(centesimas) {
   const tiempo = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
   
   return `
-    <div style="display: flex; justify-content: center; align-items: center; 
+    <div style="display: flex; gap: 30px; justify-content: center; align-items: center; 
                 padding: 15px; background: #2c3e50; color: white; 
-                border-radius: 10px; margin-bottom: 20px; font-size: 32px; 
+                border-radius: 10px; margin-bottom: 20px; font-size: 28px; 
                 font-weight: bold; font-family: 'Courier New', monospace;">
-      <span style="margin-right: 15px;">⏱️</span>
-      <span>${tiempo}</span>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span>⏱️</span>
+        <span>${tiempo}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span>💰</span>
+        <span>${monedas}/${monedasObjetivo}</span>
+      </div>
     </div>
   `;
 }
@@ -54,25 +61,44 @@ const teclasConFuncion = {
 function handleExplosion(tablero$, posicionBomba) {
   timer(1500).pipe(
     tap(() => {
-      // Explosión
-      tablero$.next(updateExplosion(tablero$.getValue(), posicionBomba, "explosion"));
+      const tableroActual = tablero$.getValue();
+      
+      // Crear copia y reemplazar bomba con explosión central
+      const copia = tableroActual.map(fila => [...fila]);
+      copia[posicionBomba.fila][posicionBomba.columna] = 5;
+      
+      // Usar updateExplosion con "explosion" para expandir
+      const tableroExplosion = updateExplosion(copia, posicionBomba, "explosion");
+      tablero$.next(tableroExplosion);
     }),
     delay(500),
     tap(() => {
       // Limpiar
-      tablero$.next(updateExplosion(tablero$.getValue(), posicionBomba, "limpiar"));
+      const tableroActual = tablero$.getValue();
+      const tableroLimpio = updateExplosion(tableroActual, posicionBomba, "limpiar");
+      tablero$.next(tableroLimpio);
     })
   ).subscribe();
+}
+
+// Contar monedas en el tablero
+function contarMonedas(tablero) {
+  return tablero.flat().filter(celda => celda === 7).length;
 }
 
 function renderGameReactive() {
   const contenedor = document.createElement("div");
   contenedor.id = "contenedorJuego";
   
+  // Estado inicial
+  const tableroInicial = initializeBoard();
+  const monedasObjetivo = contarMonedas(tableroInicial);
+  
   // Guardar estado del tablero y jugador
-  const tablero$ = new BehaviorSubject(initializeBoard());
+  const tablero$ = new BehaviorSubject(tableroInicial);
   const posicionJugador$ = new BehaviorSubject({ fila: 0, columna: 0 });
   const centesimas$ = new BehaviorSubject(0);
+  const monedas$ = new BehaviorSubject(0);
   const juegoActivo$ = new BehaviorSubject(true);
   
   // Cronómetro (cada centésima)
@@ -103,20 +129,47 @@ function renderGameReactive() {
       const resultado = movePlayer(tablero, posicionPJ, accion);
       tablero$.next(resultado.tablero);
       posicionJugador$.next(resultado.posicionJugador);
+      
+      // Actualizar monedas recogidas
+      const monedasActuales = contarMonedas(resultado.tablero);
+      monedas$.next(monedasObjetivo - monedasActuales);
+    }
+  });
+  
+  // Verificar victoria
+  monedas$.subscribe(monedas => {
+    if (monedas >= monedasObjetivo && juegoActivo$.getValue()) {
+      juegoActivo$.next(false);
+      
+      const centesimas = centesimas$.getValue();
+      const segundos = Math.floor(centesimas / 100);
+      const mins = Math.floor(segundos / 60);
+      const segs = segundos % 60;
+      const cents = centesimas % 100;
+      const tiempoFinal = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
+      
+      setTimeout(() => {
+        alert(`¡Victoria! 🎉\n\nTiempo: ${tiempoFinal}\nMonedas: ${monedas}/${monedasObjetivo}`);
+      }, 100);
     }
   });
   
   // Función para renderizar todo
   const renderizar = () => {
-    const cronometro = renderCronometro(centesimas$.getValue());
+    const contadores = renderContadores(
+      centesimas$.getValue(), 
+      monedas$.getValue(), 
+      monedasObjetivo
+    );
     const tableroHTML = renderTablero(tablero$.getValue());
     
-    contenedor.innerHTML = cronometro + tableroHTML;
+    contenedor.innerHTML = contadores + tableroHTML;
   };
   
   // Suscribirse a cambios
   tablero$.subscribe(renderizar);
   centesimas$.subscribe(renderizar);
+  monedas$.subscribe(renderizar);
   
   return contenedor;
 }
