@@ -73,18 +73,22 @@ function isValidMove(tablero, posicion, direccion) {
   if (direccion === "arriba") {
     return posicion.fila > 0 && 
            tablero[posicion.fila - 1][posicion.columna] !== 2 && 
+           tablero[posicion.fila - 1][posicion.columna] !== 3 && 
            tablero[posicion.fila - 1][posicion.columna] !== 4;
   } else if (direccion === "abajo") {
     return posicion.fila < filas - 1 && 
            tablero[posicion.fila + 1][posicion.columna] !== 2 && 
+           tablero[posicion.fila + 1][posicion.columna] !== 3 && 
            tablero[posicion.fila + 1][posicion.columna] !== 4;
   } else if (direccion === "izquierda") {
     return posicion.columna > 0 && 
            tablero[posicion.fila][posicion.columna - 1] !== 2 && 
+           tablero[posicion.fila][posicion.columna - 1] !== 3 && 
            tablero[posicion.fila][posicion.columna - 1] !== 4;
   } else if (direccion === "derecha") {
     return posicion.columna < columnas - 1 && 
            tablero[posicion.fila][posicion.columna + 1] !== 2 && 
+           tablero[posicion.fila][posicion.columna + 1] !== 3 && 
            tablero[posicion.fila][posicion.columna + 1] !== 4;
   }
   return false;
@@ -120,6 +124,8 @@ function movePlayer(tableroActual, posicionJugadorActual, direccion) {
   return { tablero: tableroFinal, posicionJugador: nuevaPosicion };
 }
 
+// Bomba
+
 // Colocar bomba
 function placeBomb(tableroActual, posicionJugadorActual) {
   const copia = tableroActual.map(fila => [...fila]);
@@ -128,6 +134,35 @@ function placeBomb(tableroActual, posicionJugadorActual) {
     tablero: copia,
     posicionBomba: { ...posicionJugadorActual }
   };
+}
+
+// Validar la expansión de la explosión de la bomba
+function isValidExpandBomb(tablero, posicion, direccion) {
+  const filas = tablero.length;
+  const columnas = tablero[0].length;
+  
+  if (direccion === "arriba") {
+    return posicion.fila > 0 && 
+           tablero[posicion.fila - 1][posicion.columna] !== 2 && 
+           tablero[posicion.fila - 1][posicion.columna] !== 4 && 
+           tablero[posicion.fila - 1][posicion.columna] !== 7;
+  } else if (direccion === "abajo") {
+    return posicion.fila < filas - 1 && 
+           tablero[posicion.fila + 1][posicion.columna] !== 2 && 
+           tablero[posicion.fila + 1][posicion.columna] !== 4 && 
+           tablero[posicion.fila + 1][posicion.columna] !== 7;
+  } else if (direccion === "izquierda") {
+    return posicion.columna > 0 && 
+           tablero[posicion.fila][posicion.columna - 1] !== 2 && 
+           tablero[posicion.fila][posicion.columna - 1] !== 4 && 
+           tablero[posicion.fila][posicion.columna - 1] !== 7;
+  } else if (direccion === "derecha") {
+    return posicion.columna < columnas - 1 && 
+           tablero[posicion.fila][posicion.columna + 1] !== 2 && 
+           tablero[posicion.fila][posicion.columna + 1] !== 4 && 
+           tablero[posicion.fila][posicion.columna + 1] !== 7;
+  }
+  return false;
 }
 
 // Actualizar explosión
@@ -146,7 +181,7 @@ function updateExplosion(tableroActual, posicionBomba, estado, radio = 1) {
       let posicionActual = { ...posicionBomba };
       
       for (let distancia = 1; distancia <= radio; distancia++) {
-        if (isValidMove(copia, posicionActual, direccion)) { // Si es válido
+        if (isValidExpandBomb(copia, posicionActual, direccion)) { // Si es válido
           // Calcular la nueva posición
           posicionActual = calculateNewPosition(posicionActual, direccion);
           // Colocar explosión en la nueva posición

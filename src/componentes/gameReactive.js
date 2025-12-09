@@ -1,4 +1,4 @@
-// game.js - RENDERIZADO REACTIVO CON CRONÓMETRO
+// game.js - RENDERIZADO REACTIVO CON CRONÓMETRO Y MUERTE
 import { BehaviorSubject, fromEvent, timer, interval } from "rxjs";
 import { map, filter, tap, delay, takeWhile } from "rxjs/operators";
 import { 
@@ -57,8 +57,22 @@ const teclasConFuncion = {
   x: "bomba"
 };
 
+// Verificar si el jugador está en la explosión
+function jugadorEnExplosion(tablero, posicionJugador) {
+  return tablero[posicionJugador.fila][posicionJugador.columna] === 5;
+}
+
+// Formatear tiempo para mostrar
+function formatearTiempo(centesimas) {
+  const segundos = Math.floor(centesimas / 100);
+  const mins = Math.floor(segundos / 60);
+  const segs = segundos % 60;
+  const cents = centesimas % 100;
+  return `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
+}
+
 // Manejar explosión de bomba
-function handleExplosion(tablero$, posicionBomba) {
+function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$) {
   timer(1500).pipe(
     tap(() => {
       const tableroActual = tablero$.getValue();
@@ -70,13 +84,36 @@ function handleExplosion(tablero$, posicionBomba) {
       // Usar updateExplosion con "explosion" para expandir
       const tableroExplosion = updateExplosion(copia, posicionBomba, "explosion");
       tablero$.next(tableroExplosion);
+      
+      // Verificar si el jugador fue alcanzado por la explosión
+      if (jugadorEnExplosion(tableroExplosion, posicionJugador$.getValue())) {
+        juegoActivo$.next(false);
+        bombaActiva$.next(false);
+        
+        const tiempoFinal = formatearTiempo(centesimas$.getValue());
+        
+        setTimeout(() => {
+          const reintentar = confirm(
+            `💀 ¡Has muerto! 💀\n\nTiempo sobrevivido: ${tiempoFinal}\n\n¿Quieres reintentar?`
+          );
+          
+          if (reintentar) {
+            window.location.reload();
+          } else {
+            window.location.hash = "";
+          }
+        }, 100);
+      }
     }),
     delay(500),
     tap(() => {
-      // Limpiar
-      const tableroActual = tablero$.getValue();
-      const tableroLimpio = updateExplosion(tableroActual, posicionBomba, "limpiar");
-      tablero$.next(tableroLimpio);
+      // Solo limpiar si el juego sigue activo
+      if (juegoActivo$.getValue()) {
+        const tableroActual = tablero$.getValue();
+        const tableroLimpio = updateExplosion(tableroActual, posicionBomba, "limpiar");
+        tablero$.next(tableroLimpio);
+        bombaActiva$.next(false); // Liberar bomba después de limpiar
+      }
     })
   ).subscribe();
 }
@@ -100,6 +137,7 @@ function renderGameReactive() {
   const centesimas$ = new BehaviorSubject(0);
   const monedas$ = new BehaviorSubject(0);
   const juegoActivo$ = new BehaviorSubject(true);
+  const bombaActiva$ = new BehaviorSubject(false); // Control de bomba única
   
   // Cronómetro (cada centésima)
   interval(10).pipe(
@@ -121,10 +159,19 @@ function renderGameReactive() {
     const tablero = tablero$.getValue();
     const posicionPJ = posicionJugador$.getValue();
     
-    if (accion === "bomba") { // Colocar bomba
+    if (accion === "bomba") {
+      // Verificar si ya hay una bomba activa
+      if (bombaActiva$.getValue()) {
+        console.log("⚠️ Ya hay una bomba activa, espera a que explote");
+        return;
+      }
+      
+      // Colocar bomba
       const { tablero: nuevoTablero, posicionBomba } = placeBomb(tablero, posicionPJ);
       tablero$.next(nuevoTablero);
-      handleExplosion(tablero$, posicionBomba);
+      bombaActiva$.next(true); // Marcar bomba como activa
+      handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$);
+      
     } else { // Mover jugador
       const resultado = movePlayer(tablero, posicionPJ, accion);
       tablero$.next(resultado.tablero);
@@ -141,12 +188,7 @@ function renderGameReactive() {
     if (monedas >= monedasObjetivo && juegoActivo$.getValue()) {
       juegoActivo$.next(false);
       
-      const centesimas = centesimas$.getValue();
-      const segundos = Math.floor(centesimas / 100);
-      const mins = Math.floor(segundos / 60);
-      const segs = segundos % 60;
-      const cents = centesimas % 100;
-      const tiempoFinal = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
+      const tiempoFinal = formatearTiempo(centesimas$.getValue());
       
       setTimeout(() => {
         alert(`¡Victoria! 🎉\n\nTiempo: ${tiempoFinal}\nMonedas: ${monedas}/${monedasObjetivo}`);
