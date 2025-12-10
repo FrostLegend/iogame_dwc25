@@ -1,6 +1,8 @@
 @import "bootstrap/scss/bootstrap";
 #app{
-  background-color: darkgrey;
+  background-image: url('./src/img/tabla.webp');
+  background-repeat: repeat;
+  background-size: 256px;
 }
 #contenedorJuego{
   width: 100vh;
@@ -17,6 +19,21 @@
   margin: auto;
 }
 
+#hud {
+  width: 576px;
+  height: auto;
+  display: flex;
+  gap: 30px;
+  justify-self: center;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  color: white;
+  font-size: 28px;
+  background-image: url('./src/img/suelo.png');
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
 
 .celda {
   text-align: center;

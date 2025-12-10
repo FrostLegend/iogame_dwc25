@@ -1,4 +1,3 @@
-// game.js - RENDERIZADO REACTIVO CON CRONÓMETRO Y MUERTE
 import { BehaviorSubject, fromEvent, timer, interval } from "rxjs";
 import { map, filter, tap, delay, takeWhile } from "rxjs/operators";
 import { 
@@ -21,16 +20,13 @@ function renderContadores(centesimas, monedas, monedasObjetivo) {
   const tiempo = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
   
   return `
-    <div style="display: flex; gap: 30px; justify-content: center; align-items: center; 
-                padding: 15px; background: #2c3e50; color: white; 
-                border-radius: 10px; margin-bottom: 20px; font-size: 28px; 
-                font-weight: bold; font-family: 'Courier New', monospace;">
+    <div id="hud">
       <div style="display: flex; align-items: center; gap: 10px;">
         <span>⏱️</span>
         <span>${tiempo}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 10px;">
-        <span>💰</span>
+        <img src="./src/img/moneda.webp" style="width: 50px;" alt="moneda">
         <span>${monedas}/${monedasObjetivo}</span>
       </div>
     </div>
@@ -39,7 +35,7 @@ function renderContadores(centesimas, monedas, monedasObjetivo) {
 
 // Renderizar tablero
 function renderTablero(tablero) {
-  const tableroHTML = tablero.flatMap((fila, f) =>
+  const tableroHTML = tablero.flatMap((fila, f) => // Convertir a una sola dimensión
     fila.map((celda, c) => 
       `<div class="celda ${tiposCelda[celda]}" data-fila="${f}" data-col="${c}"></div>`
     )
@@ -48,7 +44,7 @@ function renderTablero(tablero) {
   return `<div id="contenedorTablero">${tableroHTML}</div>`;
 }
 
-// Acción teclas
+// Funciónes para teclas
 const teclasConFuncion = {
   ArrowUp: "arriba", w: "arriba", W: "arriba",
   ArrowDown: "abajo", s: "abajo", S: "abajo",
@@ -57,12 +53,12 @@ const teclasConFuncion = {
   x: "bomba"
 };
 
-// Verificar si el jugador está en la explosión
+// Comprobar si el jugador está en la explosión
 function jugadorEnExplosion(tablero, posicionJugador) {
   return tablero[posicionJugador.fila][posicionJugador.columna] === 5;
 }
 
-// Formatear tiempo para mostrar
+// Dar formato al tiempo pa mostrarlo
 function formatearTiempo(centesimas) {
   const segundos = Math.floor(centesimas / 100);
   const mins = Math.floor(segundos / 60);
@@ -71,9 +67,9 @@ function formatearTiempo(centesimas) {
   return `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
 }
 
-// Manejar explosión de bomba
+// Controlar explosión de bomba
 function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$) {
-  timer(1500).pipe(
+  timer(1500).pipe( // Explota al 1.5 segundos
     tap(() => {
       const tableroActual = tablero$.getValue();
       
@@ -83,17 +79,17 @@ function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$
       
       // Usar updateExplosion con "explosion" para expandir
       const tableroExplosion = updateExplosion(copia, posicionBomba, "explosion");
-      tablero$.next(tableroExplosion);
+      tablero$.next(tableroExplosion); // Actualizar valor del observable tablero 
       
-      // Verificar si el jugador fue alcanzado por la explosión
-      if (jugadorEnExplosion(tableroExplosion, posicionJugador$.getValue())) {
-        juegoActivo$.next(false);
-        bombaActiva$.next(false);
+      // Comprobar si el jugador le alcanza la explosión
+      if (jugadorEnExplosion(tableroExplosion, posicionJugador$.getValue())) { // Si lo alcanza
+        juegoActivo$.next(false); // El juego termina
+        bombaActiva$.next(false); // Y liberar bomba
         
         const tiempoFinal = formatearTiempo(centesimas$.getValue());
         
         setTimeout(() => {
-          const reintentar = confirm(
+          const reintentar = confirm( // Mensaje de muerte y pregunta para reintentar
             `💀 ¡Has muerto! 💀\n\nTiempo sobrevivido: ${tiempoFinal}\n\n¿Quieres reintentar?`
           );
           
@@ -110,8 +106,8 @@ function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$
       // Solo limpiar si el juego sigue activo
       if (juegoActivo$.getValue()) {
         const tableroActual = tablero$.getValue();
-        const tableroLimpio = updateExplosion(tableroActual, posicionBomba, "limpiar");
-        tablero$.next(tableroLimpio);
+        const tableroSinExplosion = updateExplosion(tableroActual, posicionBomba, "limpiar");
+        tablero$.next(tableroSinExplosion); // Actualizar tablero sin la explosión
         bombaActiva$.next(false); // Liberar bomba después de limpiar
       }
     })
@@ -137,7 +133,7 @@ function renderGameReactive() {
   const centesimas$ = new BehaviorSubject(0);
   const monedas$ = new BehaviorSubject(0);
   const juegoActivo$ = new BehaviorSubject(true);
-  const bombaActiva$ = new BehaviorSubject(false); // Control de bomba única
+  const bombaActiva$ = new BehaviorSubject(false); // Control para bomba única
   
   // Cronómetro (cada centésima)
   interval(10).pipe(
