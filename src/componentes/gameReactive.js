@@ -7,7 +7,7 @@ import {
   updateExplosion,
   tiposCelda 
 } from "./gameLogic.js";
-
+import monedaImg from '../img/moneda.webp';
 export { renderGameReactive };
 
 // Renderizar cronómetro y monedas
@@ -26,7 +26,7 @@ function renderContadores(centesimas, monedas, monedasObjetivo) {
         <span>${tiempo}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="./src/img/moneda.webp" style="width: 50px;" alt="moneda">
+        <img src="${monedaImg}" style="width: 50px;" alt="moneda">
         <span>${monedas}/${monedasObjetivo}</span>
       </div>
     </div>
