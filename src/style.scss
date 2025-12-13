@@ -1,9 +1,8 @@
 @import "bootstrap/scss/bootstrap";
 #app{
-  background-image: url('./src/img/tabla.webp');
-  background-repeat: repeat;
-  background-size: 256px;
+  background-color: darkgray;
 }
+
 #contenedorJuego{
   width: 100vh;
   height: 100vh;
