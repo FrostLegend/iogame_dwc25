@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test": "vitest",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -13,7 +14,8 @@
     "eslint": "^9.36.0",
     "globals": "^16.4.0",
     "sass": "^1.93.2",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^4.0.15"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",

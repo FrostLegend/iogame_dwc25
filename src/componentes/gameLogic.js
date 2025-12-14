@@ -3,7 +3,12 @@ export {
   movePlayer, 
   placeBomb, 
   updateExplosion,
-  tiposCelda 
+  tiposCelda,
+  calculateNewPosition,
+  isValidMove,
+  cleanPlayerPosition,
+  placePlayer,
+  isValidExpandBomb
 };
 
 //contantes de las celdas

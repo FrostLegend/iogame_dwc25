@@ -19,8 +19,8 @@ function renderLogin() {
   form.addEventListener("submit", async ()=> {
 
     const body = {
-      email: document.getElementById('signupemail').value,
-      password: document.getElementById('signuppassword').value
+      email: document.querySelector('#signupemail').value,
+      password: document.querySelector('#signuppassword').value
     }
     await authUsuario(body, 1);
 

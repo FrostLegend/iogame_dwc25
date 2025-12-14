@@ -158,12 +158,12 @@ function renderGameReactive() {
     if (accion === "bomba") {
       // Verificar si ya hay una bomba activa
       if (bombaActiva$.getValue()) {
-        console.log("⚠️ Ya hay una bomba activa, espera a que explote");
+        console.log("Solo puedes poner una bomba simultaneamente, espera a que explote");
         return;
       }
       
       // Colocar bomba
-      const { tablero: nuevoTablero, posicionBomba } = placeBomb(tablero, posicionPJ);
+      const { tablero: nuevoTablero, posicionBomba } = placeBomb(tablero, posicionPJ); // Destructuring
       tablero$.next(nuevoTablero);
       bombaActiva$.next(true); // Marcar bomba como activa
       handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$);
