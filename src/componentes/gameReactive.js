@@ -1,14 +1,23 @@
 import { BehaviorSubject, fromEvent, timer, interval } from "rxjs";
 import { map, filter, tap, delay, takeWhile } from "rxjs/operators";
-import { 
-  initializeBoard, 
-  movePlayer, 
-  placeBomb, 
-  updateExplosion,
-  tiposCelda 
-} from "./gameLogic.js";
+import { initializeBoard, movePlayer, placeBomb, updateExplosion,tiposCelda } from "./gameLogic.js";
 import monedaImg from '../img/moneda.webp';
+import { guardarPartidaSupabase, cargarPartidaSupabase } from '../supabase.js';
 export { renderGameReactive };
+
+// Obtener estado del juego para guardarlo
+function obtenerEstadoJuego(tablero$, posicionJugador$, centesimas$, monedas$, juegoActivo$, bombaActiva$, monedasObjetivo) {
+  return {
+    tablero: tablero$.getValue(),
+    posicionJugador: posicionJugador$.getValue(),
+    tiempo: centesimas$.getValue(),
+    monedas: monedas$.getValue(),
+    monedasObjetivo: monedasObjetivo,
+    juegoActivo: juegoActivo$.getValue(),
+    bombaActiva: bombaActiva$.getValue(),
+    fechaGuardado: new Date().toISOString()
+  };
+}
 
 // Renderizar cronómetro y monedas
 function renderContadores(centesimas, monedas, monedasObjetivo) {
@@ -20,14 +29,34 @@ function renderContadores(centesimas, monedas, monedasObjetivo) {
   const tiempo = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}.${String(cents).padStart(2, '0')}`;
   
   return `
-    <div id="hud">
-      <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <div style="display: flex; align-items: center; gap: 5px;">
         <span>⏱️</span>
-        <span>${tiempo}</span>
+        <span style="font-weight: bold;">${tiempo}</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="${monedaImg}" style="width: 50px;" alt="moneda">
-        <span>${monedas}/${monedasObjetivo}</span>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <img src="${monedaImg}" style="width: 30px; height: 30px;" alt="moneda">
+        <span style="font-weight: bold;">${monedas}/${monedasObjetivo}</span>
+      </div>
+    </div>
+  `;
+}
+
+// Crear HUD estático una sola vez
+function crearHUDEstatico() {
+  return `
+    <div id="hud">
+      <div id="contadoresDinamicos"></div>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+        <button id="guardarBtn" class="btn btn-sm btn-success">
+          <i class="bi bi-save"></i> Guardar
+        </button>
+        <button id="cargarBtn" class="btn btn-sm btn-warning">
+          <i class="bi bi-folder2-open"></i> Cargar
+        </button>
+        <button id="reiniciarBtn" class="btn btn-sm btn-danger">
+          <i class="bi bi-arrow-clockwise"></i> Reiniciar
+        </button>
       </div>
     </div>
   `;
@@ -68,7 +97,7 @@ function formatearTiempo(centesimas) {
 }
 
 // Controlar explosión de bomba
-function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$) {
+function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$, resetCb) {
   timer(1500).pipe( // Explota al 1.5 segundos
     tap(() => {
       const tableroActual = tablero$.getValue();
@@ -94,7 +123,8 @@ function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$
           );
           
           if (reintentar) {
-            window.location.reload();
+            if (typeof resetCb === "function") resetCb();
+            else window.location.hash = "";
           } else {
             window.location.hash = "";
           }
@@ -103,13 +133,10 @@ function handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$
     }),
     delay(500),
     tap(() => {
-      // Solo limpiar si el juego sigue activo
-      if (juegoActivo$.getValue()) {
-        const tableroActual = tablero$.getValue();
-        const tableroSinExplosion = updateExplosion(tableroActual, posicionBomba, "limpiar");
-        tablero$.next(tableroSinExplosion); // Actualizar tablero sin la explosión
-        bombaActiva$.next(false); // Liberar bomba después de limpiar
-      }
+      const tableroActual = tablero$.getValue();
+      const tableroSinExplosion = updateExplosion(tableroActual, posicionBomba, "limpiar");
+      tablero$.next(tableroSinExplosion); // Actualizar tablero sin la explosión
+      bombaActiva$.next(false); // Liberar bomba después de limpiar
     })
   ).subscribe();
 }
@@ -123,9 +150,29 @@ function renderGameReactive() {
   const contenedor = document.createElement("div");
   contenedor.id = "contenedorJuego";
   
+  // Crear estructura inicial una sola vez
+  contenedor.innerHTML = crearHUDEstatico() + '<div id="contenedorTableroWrapper"></div>';
+  
+  // Listener único para los tres botones
+  const botonNombres = {
+    guardarBtn: "guardar",
+    cargarBtn: "cargar",
+    reiniciarBtn: "reiniciar"
+  };
+
+  contenedor.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn || !contenedor.contains(btn)) return;
+    const nombre = botonNombres[btn.id];
+    if (nombre) console.log(nombre);
+    if (nombre === "reiniciar") {
+      resetGame();
+    }
+  });
+  
   // Estado inicial
   const tableroInicial = initializeBoard();
-  const monedasObjetivo = contarMonedas(tableroInicial);
+  let monedasObjetivo = contarMonedas(tableroInicial);
   
   // Guardar estado del tablero y jugador
   const tablero$ = new BehaviorSubject(tableroInicial);
@@ -135,11 +182,22 @@ function renderGameReactive() {
   const juegoActivo$ = new BehaviorSubject(true);
   const bombaActiva$ = new BehaviorSubject(false); // Control para bomba única
   
-  // Cronómetro (cada centésima)
-  interval(10).pipe(
-    takeWhile(() => juegoActivo$.getValue()),
-    tap(() => centesimas$.next(centesimas$.getValue() + 1))
-  ).subscribe();
+  // Cronómetro (cada centésima) — controlado para reiniciarlo en reset
+  let timerSub = null;
+  function startTimer() {
+    if (timerSub) timerSub.unsubscribe();
+    timerSub = interval(10).subscribe(() => {
+      if (juegoActivo$.getValue()) centesimas$.next(centesimas$.getValue() + 1);
+    });
+  }
+  // Detener timer cuando el juego deje de estar activo
+  juegoActivo$.subscribe(val => {
+    if (!val && timerSub) {
+      timerSub.unsubscribe();
+      timerSub = null;
+    }
+  });
+  startTimer();
   
   // Observable para cualquier evento de presion de tecla en la ventana del juego
   const key$ = fromEvent(document, "keydown").pipe(
@@ -150,6 +208,19 @@ function renderGameReactive() {
     filter(Boolean) // Por si la tecla no tiene función
   );
   
+  // reiniciar el estado y el timer
+  function resetGame() {
+    const nuevoTablero = initializeBoard();
+    tablero$.next(nuevoTablero);
+    posicionJugador$.next({ fila: 0, columna: 0 });
+    centesimas$.next(0);
+    monedas$.next(0);
+    juegoActivo$.next(true);
+    bombaActiva$.next(false);
+    monedasObjetivo = contarMonedas(nuevoTablero);
+    startTimer();
+  }
+
   // Suscripción para manejar movimientos y bombas
   key$.subscribe(accion => {
     const tablero = tablero$.getValue();
@@ -166,7 +237,7 @@ function renderGameReactive() {
       const { tablero: nuevoTablero, posicionBomba } = placeBomb(tablero, posicionPJ); // Destructuring
       tablero$.next(nuevoTablero);
       bombaActiva$.next(true); // Marcar bomba como activa
-      handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$);
+      handleExplosion(tablero$, posicionBomba, posicionJugador$, juegoActivo$, centesimas$, bombaActiva$, resetGame);
       
     } else { // Mover jugador
       const resultado = movePlayer(tablero, posicionPJ, accion);
@@ -192,22 +263,32 @@ function renderGameReactive() {
     }
   });
   
-  // Función para renderizar todo
+  // Función para renderizar solo lo dinámico
   const renderizar = () => {
-    const contadores = renderContadores(
-      centesimas$.getValue(), 
-      monedas$.getValue(), 
-      monedasObjetivo
-    );
-    const tableroHTML = renderTablero(tablero$.getValue());
+    // Actualizar solo los contadores (parte dinámica)
+    const contadoresDiv = contenedor.querySelector('#contadoresDinamicos');
+    if (contadoresDiv) {
+      contadoresDiv.innerHTML = renderContadores(
+        centesimas$.getValue(), 
+        monedas$.getValue(), 
+        monedasObjetivo
+      );
+    }
     
-    contenedor.innerHTML = contadores + tableroHTML;
+    // Actualizar tablero
+    const tableroWrapper = contenedor.querySelector('#contenedorTableroWrapper');
+    if (tableroWrapper) {
+      tableroWrapper.innerHTML = renderTablero(tablero$.getValue());
+    }
   };
   
   // Suscribirse a cambios
   tablero$.subscribe(renderizar);
   centesimas$.subscribe(renderizar);
   monedas$.subscribe(renderizar);
+
+  // Renderizado inicial
+  renderizar();
   
   return contenedor;
 }

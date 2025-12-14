@@ -64,3 +64,67 @@ export function logout() {
     removeUserData();
     console.log('✅ Sesión cerrada');
 }
+
+// Guardar partida del usuario en Supabase
+export async function guardarPartidaSupabase(estadoJuego) {
+    const token = localStorage.getItem('supabase_token');
+    const user = JSON.parse(localStorage.getItem('user_data'));
+    
+    if (!token || !user) {
+        throw new Error('Debes iniciar sesión para guardar partidas');
+    }
+    
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/partidas`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+            usuario_id: user.id,
+            estado_juego: estadoJuego,
+            fecha_guardado: new Date().toISOString()
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al guardar partida');
+    }
+    
+    return await response.json();
+}
+
+// 📂 Cargar última partida
+export async function cargarPartidaSupabase() {
+    const token = localStorage.getItem('supabase_token');
+    const user = JSON.parse(localStorage.getItem('user_data'));
+    
+    if (!token || !user) {
+        throw new Error('Debes iniciar sesión para cargar partidas');
+    }
+    
+    const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/partidas?usuario_id=eq.${user.id}&select=*&order=fecha_guardado.desc&limit=1`,
+        {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${token}`
+            }
+        }
+    );
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al cargar partida');
+    }
+    
+    const partidas = await response.json();
+    if (partidas.length === 0) {
+        return null; // No hay partidas guardadas
+    }
+    
+    return partidas[0].estado_juego;
+}
