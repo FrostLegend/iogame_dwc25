@@ -1,4 +1,4 @@
-import { SUPABASE_KEY, USER_RUTE } from "./env.js";
+import { SUPABASE_KEY, USER_RUTE, SUPABASE_URL } from "./env.js";
 
 // Funciones para localStorage
 const getToken = () => localStorage.getItem('supabase_token');
@@ -97,7 +97,7 @@ export async function guardarPartidaSupabase(estadoJuego) {
     return await response.json();
 }
 
-// 📂 Cargar última partida
+// Cargar última partida jugada por el usuario logueado
 export async function cargarPartidaSupabase() {
     const token = localStorage.getItem('supabase_token');
     const user = JSON.parse(localStorage.getItem('user_data'));
@@ -106,7 +106,7 @@ export async function cargarPartidaSupabase() {
         throw new Error('Debes iniciar sesión para cargar partidas');
     }
     
-    const response = await fetch(
+    const response = await fetch( // Buscar la última partida guardada por fecha descendente por el usuario
         `${SUPABASE_URL}/rest/v1/partidas?usuario_id=eq.${user.id}&select=*&order=fecha_guardado.desc&limit=1`,
         {
             headers: {

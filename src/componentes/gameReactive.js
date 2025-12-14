@@ -160,13 +160,67 @@ function renderGameReactive() {
     reiniciarBtn: "reiniciar"
   };
 
-  contenedor.addEventListener("click", (e) => {
+  const accionesBotones = {
+    guardar: async () => {      
+      try {
+        const estado = obtenerEstadoJuego(
+          tablero$, 
+          posicionJugador$, 
+          centesimas$, 
+          monedas$, 
+          juegoActivo$, 
+          bombaActiva$, 
+          monedasObjetivo
+        );
+        
+        await guardarPartidaSupabase(estado);
+        alert('Partida guardada correctamente');
+      } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('Error al guardar la partida: ' + error.message);
+      }
+    },
+    
+    cargar: async () => {
+      try {
+        const estadoCargado = await cargarPartidaSupabase();
+        
+        if (!estadoCargado) {
+          alert('No hay partidas guardadas');
+          return;
+        }
+        
+        // Restaurar el estado del juego
+        tablero$.next(estadoCargado.tablero);
+        posicionJugador$.next(estadoCargado.posicionJugador);
+        centesimas$.next(estadoCargado.tiempo);
+        monedas$.next(estadoCargado.monedas);
+        juegoActivo$.next(estadoCargado.juegoActivo);
+        bombaActiva$.next(estadoCargado.bombaActiva);
+        monedasObjetivo = estadoCargado.monedasObjetivo;
+        
+        // Reiniciar el timer si el juego está activo
+        if (estadoCargado.juegoActivo) {
+          startTimer();
+        }
+        
+        alert('Partida cargada correctamente');
+      } catch (error) {
+        console.error('Error al cargar:', error);
+        alert('Error al cargar la partida: ' + error.message);
+      }
+    },
+    
+    reiniciar: () => resetGame()
+  };
+
+  contenedor.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn || !contenedor.contains(btn)) return;
     const nombre = botonNombres[btn.id];
-    if (nombre) console.log(nombre);
-    if (nombre === "reiniciar") {
-      resetGame();
+    
+    if (nombre && accionesBotones[nombre]) {
+      await accionesBotones[nombre]();
     }
   });
   
