@@ -2,30 +2,47 @@ import { authUsuario } from "../supabase.js";
 export { renderRegister };
 
 function renderRegister() {
-
   const form = document.createElement("form");
   form.id = "signupForm";
+  form.className = "container mt-5";
+
   form.innerHTML = `
-    <div class="mb-3">
-      <label for="signupemail" class="form-label">Email address</label>
-      <input type="email" class="form-control" id="signupemail" required>
-      <div id="emailHelp" class="form-text">We'll never share your email.</div>
+    <div class="card mx-auto" style="max-width: 400px;">
+      <div class="card-body">
+        <h2 class="card-title text-center mb-4">Register</h2>
+        
+        <div class="form-group">
+          <label for="signupemail">Email</label>
+          <input type="email" class="form-control" id="signupemail" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="signuppassword">Contraseña</label>
+          <input type="password" class="form-control" id="signuppassword" required>
+          <small class="form-text text-muted">No compartas tu contraseña</small>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
+      </div>
     </div>
-    <div class="mb-3">
-      <label for="signuppassword" class="form-label">Password</label>
-      <input type="password" class="form-control" id="signuppassword" required>
-    </div>
-    <button id="boton" type="submit" class="btn btn-primary">Registrarse</button>`;
+  `;
   
   form.addEventListener("submit", async ()=> {
-
+    e.preventDefault(); // evitar recarga
+    
     const body = {
       email: document.querySelector('#signupemail').value,
       password: document.querySelector('#signuppassword').value
-    }
-    await authUsuario(body, 0);
+    };
 
-    form.reset();
+    try {
+      await authUsuario(body, 0);
+      form.reset();
+      // Redirigir al login
+      window.location.hash = "#login";
+    } catch (error) {
+      alert("Login failed: " + error.message);
+    }
   })
 
   return form;

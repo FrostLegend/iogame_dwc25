@@ -2,7 +2,7 @@ import "./style.scss";
 // eslint-disable-next-line
 import * as bootstrap from 'bootstrap';
 
-import { renderHeader } from "./componentes/header";
+import { renderHeader, updateHeader } from "./componentes/header";
 import { renderFooter } from "./componentes/footer";
 import { renderContent } from "./componentes/content";
 import { router } from "./router";
@@ -17,8 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
   footerDiv.innerHTML += renderFooter();
   
   router(window.location.hash, appDiv);
+
   window.addEventListener("hashchange", () => {
-    router(window.location.hash, appDiv);
+    router(window.location.hash, appDiv); 
+    updateHeader(); // Actualiza el header al cambiar la ruta
   });
+
+  updateHeader(); // Inicializa el header correctamente al cargar la página
 });
 
