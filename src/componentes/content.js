@@ -1,151 +1,56 @@
 export { renderContent };
+
 function renderContent() {
-  return `
-    <div class="container px-4 py-5" id="custom-cards">
-      <h2 class="pb-2 border-bottom">Custom cards</h2>
-      <div class="row row-cols-1 row-cols-lg-3 align-items-stretch g-4 py-5">
-        <div class="col">
-          <div
-            class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg"
-            style="background-image: url('unsplash-photo-1.jpg')"
-          >
-            <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1">
-              <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">
-                Short title, long jacket
-              </h3>
-              <ul class="d-flex list-unstyled mt-auto">
-                <li class="me-auto">
-                  <img
-                    src="https://github.com/twbs.png"
-                    alt="Bootstrap"
-                    width="32"
-                    height="32"
-                    class="rounded-circle border border-white"
-                  />
-                </li>
-                <li class="d-flex align-items-center me-3">
-                  <svg
-                    class="bi me-2"
-                    width="1em"
-                    height="1em"
-                    role="img"
-                    aria-label="Location"
-                  >
-                    <use xlink:href="#geo-fill"></use>
-                  </svg>
-                  <small>Earth</small>
-                </li>
-                <li class="d-flex align-items-center">
-                  <svg
-                    class="bi me-2"
-                    width="1em"
-                    height="1em"
-                    role="img"
-                    aria-label="Duration"
-                  >
-                    <use xlink:href="#calendar3"></use>
-                  </svg>
-                  <small>3d</small>
-                </li>
-              </ul>
-            </div>
+  const container = document.createElement("div");
+  container.className = "container py-5";
+
+  container.innerHTML = `
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+
+        <h1 class="display-4 font-weight-bold mb-3">💣 BomberCoin</h1>
+        <p class="lead mb-4">
+          Coloca bombas, esquiva explosiones y recoge todas las monedas
+        </p>
+
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">🎮 Cómo jugar</h5>
+            <ul class="list-unstyled text-left mb-0">
+              <li>🕹️ Muévete con <strong>WASD</strong> o <strong>flechas</strong></li>
+              <li>💣 Pulsa <strong>X</strong> para colocar una bomba</li>
+              <li>🪙 Recoge todas las monedas para ganar</li>
+            </ul>
           </div>
         </div>
-        <div class="col">
-          <div
-            class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg"
-            style="background-image: url('unsplash-photo-2.jpg')"
-          >
-            <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1">
-              <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">
-                Much longer title that wraps to multiple lines
-              </h3>
-              <ul class="d-flex list-unstyled mt-auto">
-                <li class="me-auto">
-                  <img
-                    src="https://github.com/twbs.png"
-                    alt="Bootstrap"
-                    width="32"
-                    height="32"
-                    class="rounded-circle border border-white"
-                  />
-                </li>
-                <li class="d-flex align-items-center me-3">
-                  <svg
-                    class="bi me-2"
-                    width="1em"
-                    height="1em"
-                    role="img"
-                    aria-label="Location"
-                  >
-                    <use xlink:href="#geo-fill"></use>
-                  </svg>
-                  <small>Pakistan</small>
-                </li>
-                <li class="d-flex align-items-center">
-                  <svg
-                    class="bi me-2"
-                    width="1em"
-                    height="1em"
-                    role="img"
-                    aria-label="Duration"
-                  >
-                    <use xlink:href="#calendar3"></use>
-                  </svg>
-                  <small>4d</small>
-                </li>
-              </ul>
-            </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <button id="jugarBoton" class="btn btn-success btn-block btn-lg">Jugar</button>
           </div>
-        </div>
-        <div class="col">
-          <div
-            class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg"
-            style="background-image: url('unsplash-photo-3.jpg')"
-          >
-            <div class="d-flex flex-column h-100 p-5 pb-3 text-shadow-1">
-              <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold">
-                Another longer title belongs here
-              </h3>
-              <ul class="d-flex list-unstyled mt-auto">
-                <li class="me-auto">
-                  <img
-                    src="https://github.com/twbs.png"
-                    alt="Bootstrap"
-                    width="32"
-                    height="32"
-                    class="rounded-circle border border-white"
-                  />
-                </li>
-                <li class="d-flex align-items-center me-3">
-                  <svg
-                    class="bi me-2"
-                    width="1em"
-                    height="1em"
-                    role="img"
-                    aria-label="Location"
-                  >
-                    <use xlink:href="#geo-fill"></use>
-                  </svg>
-                  <small>California</small>
-                </li>
-                <li class="d-flex align-items-center">
-                  <svg
-                    class="bi me-2"
-                    width="1em"
-                    height="1em"
-                    role="img"
-                    aria-label="Duration"
-                  >
-                    <use xlink:href="#calendar3"></use>
-                  </svg>
-                  <small>5d</small>
-                </li>
-              </ul>
-            </div>
+          <div class="col-md-4 mb-3">
+            <button id="partidasBoton" class="btn btn-info btn-block btn-lg">Partidas</button>
+          </div>
+          <div class="col-md-4 mb-3">
+            <button id="rankingBoton" class="btn btn-warning btn-block btn-lg">Ranking</button>
           </div>
         </div>
       </div>
     </div>
   `;
+
+  // Eventos
+  container.querySelector("#jugarBoton").addEventListener("click", () => {
+    window.location.hash = "#game";
+  });
+
+  container.querySelector("#partidasBoton").addEventListener("click", () => {
+    window.location.hash = "#partidas";
+  });
+
+  container.querySelector("#rankingBoton").addEventListener("click", () => {
+    alert("Ranking próximamente");
+  });
+
+  return container;
 }

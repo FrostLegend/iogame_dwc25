@@ -2,6 +2,7 @@ import { renderContent } from "./componentes/content";
 import { renderLogin } from "./componentes/login";
 import { renderRegister} from "./componentes/register";
 import { renderGameReactive } from "./componentes/gameReactive";
+import { renderPartidas } from "./componentes/partidas.js";
 import { isLoggedIn } from "./supabase.js";
 
 export {router};
@@ -10,7 +11,8 @@ const routes = new Map([
     ['',renderContent],
     ['#game',renderGameReactive],
     ['#login',renderLogin],
-    ['#register',renderRegister]
+    ['#register',renderRegister],
+    ['#partidas',renderPartidas]
 ])
 
 

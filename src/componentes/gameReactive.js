@@ -3,7 +3,7 @@ import { map, filter, tap, delay, takeWhile } from "rxjs/operators";
 import { initializeBoard, movePlayer, placeBomb, updateExplosion,tiposCelda } from "./gameLogic.js";
 import monedaImg from '../img/moneda.webp';
 import { guardarPartidaSupabase, cargarPartidaSupabase } from '../supabase.js';
-export { renderGameReactive };
+export { renderGameReactive, formatearTiempo };
 
 // Obtener estado del juego para guardarlo
 function obtenerEstadoJuego(tablero$, posicionJugador$, centesimas$, monedas$, juegoActivo$, bombaActiva$, monedasObjetivo) {
@@ -204,7 +204,7 @@ function renderGameReactive() {
           startTimer();
         }
         
-        alert('Partida cargada correctamente');
+        console.log('Partida cargada correctamente');
       } catch (error) {
         console.error('Error al cargar:', error);
         alert('Error al cargar la partida: ' + error.message);
@@ -235,6 +235,20 @@ function renderGameReactive() {
   const monedas$ = new BehaviorSubject(0);
   const juegoActivo$ = new BehaviorSubject(true);
   const bombaActiva$ = new BehaviorSubject(false); // Control para bomba única
+
+  // Cargar partida si existe en sessionStorage
+  const partidaCargada = sessionStorage.getItem('partidaCargada');
+  if (partidaCargada) {
+    const estado = JSON.parse(partidaCargada);
+    tablero$.next(estado.tablero);
+    posicionJugador$.next(estado.posicionJugador);
+    centesimas$.next(estado.tiempo);
+    monedas$.next(estado.monedas);
+    juegoActivo$.next(estado.juegoActivo);
+    bombaActiva$.next(estado.bombaActiva);
+    monedasObjetivo = estado.monedasObjetivo;
+    sessionStorage.removeItem('partidaCargada'); // Limpiar después de cargar
+  }
   
   // Cronómetro (cada centésima) — controlado para reiniciarlo en reset
   let timerSub = null;

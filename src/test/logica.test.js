@@ -51,13 +51,25 @@ describe('Funciones PURAS del juego', () => {
     it('debe permitir movimiento a celda vacía (aire)', () => {
       const posicion = { fila: 1, columna: 1 };
       const resultado = isValidMove(tablero, posicion, 'arriba');
-      expect(resultado).toBe(true); // Celda [0][1] es 0 (aire)
+      expect(resultado).toBe(true); // aire
     });
     
-    it('debe prohibir movimiento a pilar', () => {
+    it('debe prohibir movimiento a muro', () => {
       const posicion = { fila: 1, columna: 1 };
       const resultado = isValidMove(tablero, posicion, 'izquierda');
-      expect(resultado).toBe(false); // Celda [1][0] es 3 (muro)
+      expect(resultado).toBe(false); // muro
+    });
+
+    it('debe prohibir movimiento a pilar', () => {
+      const posicion = { fila: 1, columna: 1 };
+      const resultado = isValidMove(tablero, posicion, 'abajo');
+      expect(resultado).toBe(false); // pilar
+    });
+
+    it('debe prohibir movimiento a bomba', () => {
+      const posicion = { fila: 1, columna: 1 };
+      const resultado = isValidMove(tablero, posicion, 'derecha');
+      expect(resultado).toBe(false); // bomba
     });
     
     it('debe prohibir movimiento fuera del tablero', () => {

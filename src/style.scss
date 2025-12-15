@@ -21,8 +21,11 @@ body {
 
 #contenedorJuego{
   width: 100vh;
-  height: 100vh;
-  place-content: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   margin: auto;
 }
 
@@ -39,7 +42,6 @@ body {
   height: auto;
   display: flex;
   gap: 30px;
-  justify-self: center;
   justify-content: center;
   align-items: center;
   padding: 15px;
